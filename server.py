@@ -110,8 +110,9 @@ If the query is in Telugu, reply in Telugu."""
         else:
             contents.append("Please analyze the attached image/document thoroughly.")
 
-    active_model = 'gemini-3.6-flash'
+    active_model = 'gemini-2.5-flash'
 
+    err_msg = "Unknown error"
     for attempt in range(2):
         try:
             response = client.models.generate_content(
@@ -135,5 +136,6 @@ If the query is in Telugu, reply in Telugu."""
     return jsonify({"reply": f"API Error: {err_msg}"})
 
 if __name__ == '__main__':
-    print("\nAI Backend Running at: http://127.0.0.1:5000\n")
-    app.run(host='127.0.0.1', port=5000, debug=False)
+    port = int(os.environ.get("PORT", 5000))
+    print(f"\nAI Backend Running on port {port}...\n")
+    app.run(host='0.0.0.0', port=port, debug=False)

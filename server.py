@@ -5,14 +5,13 @@ import shutil
 import psutil
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 
 app = Flask(__name__, static_folder='.')
 CORS(app)
 
 API_KEY = os.environ.get("GEMINI_API_KEY", "AQ.Ab8RN6LzUz-B1SRmXU3kSIh2fMTUnvwDseLN3vw_ceM0Y0Sm4w")
-client = genai.Client(api_key=API_KEY)
+genai.configure(api_key=API_KEY)
 
 def get_system_health_metrics():
     """Gathers CPU, Memory, Disk, and detailed Battery telemetry."""
@@ -63,7 +62,10 @@ def chat_endpoint():
     contents = []
     if file_data and mime_type:
         file_bytes = base64.b64decode(file_data)
-        contents.append(types.Part.from_bytes(data=file_bytes, mime_type=mime_type))
+        contents.append({
+            "mime_type": mime_type,
+            "data": file_bytes
+        })
 
     q_lower = user_query.lower()
 
@@ -110,22 +112,18 @@ If the query is in Telugu, reply in Telugu."""
         else:
             contents.append("Please analyze the attached image/document thoroughly.")
 
-    active_model = "gemini-2.0-flash"
-
     err_msg = "Unknown error"
     for attempt in range(2):
         try:
-            response = client.models.generate_content(
-                model=active_model,
-                contents=contents,
-                config={
-                    "system_instruction": (
-                        "You are an All-in-One AI System Assistant. You support academic guidance, "
-                        "hardware diagnostics, log debugging, and Linux systems administration. "
-                        "Always format responses with Markdown headers, bullet points, and code blocks."
-                    )
-                }
+            model = genai.GenerativeModel(
+                model_name="gemini-1.5-flash",
+                system_instruction=(
+                    "You are an All-in-One AI System Assistant. You support academic guidance, "
+                    "hardware diagnostics, log debugging, and Linux systems administration. "
+                    "Always format responses with Markdown headers, bullet points, and code blocks."
+                )
             )
+            response = model.generate_content(contents)
             if response and response.text:
                 return jsonify({"reply": response.text})
         except Exception as e:

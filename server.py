@@ -11,7 +11,7 @@ from google.genai import types
 app = Flask(__name__, static_folder='.')
 CORS(app)
 
-API_KEY = "AQ.Ab8RN6KD-K9xIA5Vcx7_Czfqym_YUaigoU60iZ_b2Fi5t9mfpg"
+API_KEY = os.environ.get("GEMINI_API_KEY", "AQ.Ab8RN6LzUz-B1SRmXU3kSIh2fMTUnvwDseLN3vw_ceM0Y0Sm4w")
 client = genai.Client(api_key=API_KEY)
 
 def get_system_health_metrics():

@@ -110,7 +110,7 @@ If the query is in Telugu, reply in Telugu."""
         else:
             contents.append("Please analyze the attached image/document thoroughly.")
 
-    active_model = 'gemini-2.5-flash'
+    active_model = "gemini-2.0-flash"
 
     err_msg = "Unknown error"
     for attempt in range(2):

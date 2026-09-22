@@ -112,30 +112,46 @@ If the query is in Telugu, reply in Telugu."""
         else:
             contents.append("Please analyze the attached image/document thoroughly.")
 
-    # 404 నివారించడానికి వరుసగా మోడల్స్ చెక్ చేస్తుంది
-    models_to_try = [
+    system_instruction = (
+        "You are an All-in-One AI System Assistant. You support academic guidance, "
+        "hardware diagnostics, log debugging, and Linux systems administration. "
+        "Always format responses with Markdown headers, bullet points, and code blocks."
+    )
+
+    # ఖాతాలో అందుబాటులో ఉన్న యాక్టివ్ మోడల్స్‌ను డైనమిక్‌గా పొందడం
+    candidate_models = [
+        "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash-8b",
         "gemini-1.5-flash-latest",
-        "gemini-1.5-pro-latest",
-        "gemini-pro"
+        "gemini-1.5-flash",
+        "gemini-1.5-pro-latest"
     ]
 
+    try:
+        live_models = [
+            m.name for m in genai.list_models()
+            if 'generateContent' in m.supported_generation_methods
+        ]
+        if live_models:
+            # అకౌంట్‌లోని అసలైన మోడల్స్‌కు మొదటి ప్రాధాన్యత
+            candidate_models = live_models + candidate_models
+    except Exception as list_err:
+        print(f"[ListModels Notice]: {list_err}")
+
     err_msg = "Unknown error"
-    for mod_name in models_to_try:
+    for mod_name in candidate_models:
         try:
             model = genai.GenerativeModel(
                 model_name=mod_name,
-                system_instruction=(
-                    "You are an All-in-One AI System Assistant. You support academic guidance, "
-                    "hardware diagnostics, log debugging, and Linux systems administration. "
-                    "Always format responses with Markdown headers, bullet points, and code blocks."
-                )
+                system_instruction=system_instruction
             )
             response = model.generate_content(contents)
             if response and response.text:
                 return jsonify({"reply": response.text})
         except Exception as e:
             err_msg = str(e)
-            print(f"[Model {mod_name} Error]: {err_msg}")
+            print(f"[Model {mod_name} Failed]: {err_msg}")
             continue
 
     return jsonify({"reply": f"API Error: {err_msg}"})

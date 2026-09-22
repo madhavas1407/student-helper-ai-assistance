@@ -112,11 +112,18 @@ If the query is in Telugu, reply in Telugu."""
         else:
             contents.append("Please analyze the attached image/document thoroughly.")
 
+    # 404 నివారించడానికి వరుసగా మోడల్స్ చెక్ చేస్తుంది
+    models_to_try = [
+        "gemini-1.5-flash-latest",
+        "gemini-1.5-pro-latest",
+        "gemini-pro"
+    ]
+
     err_msg = "Unknown error"
-    for attempt in range(2):
+    for mod_name in models_to_try:
         try:
             model = genai.GenerativeModel(
-                model_name="gemini-1.5-flash",
+                model_name=mod_name,
                 system_instruction=(
                     "You are an All-in-One AI System Assistant. You support academic guidance, "
                     "hardware diagnostics, log debugging, and Linux systems administration. "
@@ -128,8 +135,8 @@ If the query is in Telugu, reply in Telugu."""
                 return jsonify({"reply": response.text})
         except Exception as e:
             err_msg = str(e)
-            print(f"[Error]: {err_msg}")
-            time.sleep(1)
+            print(f"[Model {mod_name} Error]: {err_msg}")
+            continue
 
     return jsonify({"reply": f"API Error: {err_msg}"})
 
